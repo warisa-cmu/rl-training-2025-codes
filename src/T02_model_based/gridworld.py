@@ -1,17 +1,18 @@
-import numpy as np
 import sys
-from gymnasium import Env, spaces
 from contextlib import closing
 from io import StringIO
 
-# define actions
+import gymnasium as gym
+import numpy as np
+
+# Define actions
 UP = 0
 RIGHT = 1
 DOWN = 2
 LEFT = 3
 
 
-class GridworldEnv(Env):
+class GridworldEnv(gym.Env):
     """
     A 4x4 Grid World environment from Sutton's RL Book.
     Terminal states: top left & bottom right corner.
@@ -21,7 +22,7 @@ class GridworldEnv(Env):
     Reward of -1 at each step until a terminal state is reached.
     """
 
-    metadata = {"render_modes": ["human", "ansi"]}
+    metadata = {"render_modes": ["human", "ansi"], "render_fps": 15}
 
     def __init__(self):
         super().__init__()
@@ -29,8 +30,8 @@ class GridworldEnv(Env):
         self.nS = np.prod(self.shape)
         self.nA = 4
 
-        self.observation_space = spaces.Discrete(self.nS)
-        self.action_space = spaces.Discrete(self.nA)
+        self.observation_space = gym.spaces.Discrete(self.nS)
+        self.action_space = gym.spaces.Discrete(self.nA)
 
         # Build transition table
         self.P = {}
@@ -76,7 +77,6 @@ class GridworldEnv(Env):
 
     def render(self, mode="human"):
         outfile = StringIO() if mode == "ansi" else sys.stdout
-
         for s in range(self.nS):
             position = np.unravel_index(s, self.shape)
             if self.s == s:
@@ -95,3 +95,11 @@ class GridworldEnv(Env):
         if mode == "ansi":
             with closing(outfile):
                 return outfile.getvalue()
+
+
+# Register environment
+gym.register(
+    id="GridWorld-v0",
+    entry_point="gridworld:GridworldEnv",
+    max_episode_steps=300,
+)
